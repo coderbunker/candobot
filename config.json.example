@@ -1,0 +1,10 @@
+{
+    "prefix": "candra",
+    "whitelisted": [
+        "Agora Space #3:bunker",
+        "Agora - management",
+        "File Transfer"
+    ],
+    "management": "Agora - management",
+    "store": "./tickets.json"
+}

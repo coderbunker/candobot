@@ -1,0 +1,8 @@
+config.json
+.yarnrc
+.pki
+node_modules/
+tickets.json
+*.lock
+**.swp
+.v8flags.*
