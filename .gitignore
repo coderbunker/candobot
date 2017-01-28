@@ -6,3 +6,5 @@ tickets.json
 *.lock
 **.swp
 .v8flags.*
+*.txt
+yo.js

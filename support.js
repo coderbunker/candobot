@@ -1,6 +1,7 @@
 'use strict'
 
 const fs = require('fs')
+const path = require('path')
 
 const Sample = {
     assignee: null,
@@ -105,6 +106,21 @@ function help() {
     return actions.map(action => `${action.regexp.toString()}`).join('\n')
 }
 
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+var sources = {}
+
+function gimme(type) {
+    if(!sources[type]) {
+        const content = fs.readFileSync(path.basename(`${type}.txt`))
+        sources[type] = content.toString().split('\n')
+    }
+    const saying = sources[type][getRandomInt(0, sources[type].length)]
+    return saying
+}
+
 const actions = [
     {
         regexp: /^$/gi,
@@ -127,39 +143,44 @@ const actions = [
         reply:  (message, output) => `will ${output.content} (ticket #${output.id})`,
     },
     {
-        regexp:  /show #([0-9]*)/gi,
+        regexp: /show #([0-9]*)/gi,
         action: (tickets, message, id) => findTicket(tickets, id),
         reply: (message, output) => showTicket(output),
     },   
     {
-        regexp:  /take #([0-9]*)/gi,
+        regexp: /take #([0-9]*)/gi,
         action: (tickets, message, id) => assign(tickets, id,  message.userName),
         reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
     },
     {
-        regexp:  /assign #([0-9]*) to (\w*)/gi,
+        regexp: /assign #([0-9]*) to (\w*)/gi,
         action: (tickets, message, id, assignee) => assign(tickets, id, assignee),
         reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
     },
     {
-        regexp:  /debug/gi,
+        regexp: /debug/gi,
         action: (tickets, message, id) => tickets,
         reply: stringifyThis,
     },
     {
-        regexp:  /todo/gi,
+        regexp: /todo/gi,
         action: (tickets, message, id) => tickets,
         reply: (message, output) => showTickets(output, ['open']),
     },
     {
-        regexp:  /history/gi,
+        regexp: /history/gi,
         action: (tickets, message, id) => tickets,
         reply: (message, output) => showTickets(output, ['open', 'closed']),
     },
     {
-        regexp:  /forget it/gi,
+        regexp: /forget it/gi,
         action: (tickets, message, id) => forget(tickets),
         reply: (message, output) => `deleted ${output} tickets`,
+    },
+    {
+        regexp: /gimme\s*a*n*\s*(\w*)/gi,
+        action: (tickets, message, type) => gimme(type),
+        reply: (message, output) => `${message.userName} ${output[0].toLowerCase()}${output.substr(1)}`,
     },
 ]
 
@@ -186,7 +207,7 @@ function process(tickets, message) {
             reply = `${action.reply.bind(output)(message, output)}`
         // }
     } else {
-        reply = `I don't understand: ${message.content}`
+        reply = `I don't understand: ${message.content}, can you try again?`
     }
     return `#${message.prefix}: ${reply}`
 }

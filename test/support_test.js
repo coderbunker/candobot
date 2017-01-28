@@ -49,7 +49,7 @@ describe("support", function() {
 
     it("invalid", function() {
         const reply = support.process(tickets, message('handsome'))
-        assert.equal(reply, "#candra: I don't understand: handsome")
+        assert.equal(reply, "#candra: I don't understand: handsome, can you try again?")
     })
 
     it("help", function() {
@@ -60,5 +60,10 @@ describe("support", function() {
     it("forget it", function() {
         const reply = support.process(tickets, message('forget it'))
         assert.equal(tickets.lastId, 0)
+    })
+
+    it("gimme a compliment", function() {
+        const reply = support.process(tickets, message('gimme a compliment'))
+        assert.equal(reply.substr(-1, 1), '.')
     })
 })
