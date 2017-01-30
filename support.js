@@ -66,9 +66,14 @@ const actions = [
     reply: (message, output) => JSON.stringify(output, null, 4),
 },
 {
+    action: (tickets, _message, username) => [tickets, username.toLowerCase()],
+    regexp: /todo ?(\w*)/i,
+    reply: (message, output) => showTickets(output[0], ['open'], output[1]),
+},
+{
     action: (tickets, _message) => tickets,
-    regexp: /todo/i,
-    reply: (message, output) => showTickets(output, ['open']),
+    regexp: /mine/i,
+    reply: (message, output) => showTickets(output, ['open'], message.userName),
 },
 {
     action: (tickets, _message) => tickets,
@@ -111,7 +116,7 @@ function closeTicket(tickets, id) {
 function openTicket(tickets, message, content) {
     const newTicket = createTicket()
     tickets.lastId += 1
-    newTicket.id = tickets.lastId
+    newTicket.id = `${tickets.lastId}`
     newTicket.created = new Date()
     newTicket.content = content
     newTicket.roomName = message.roomName
@@ -124,16 +129,28 @@ function showTicket(ticket) {
     return `${ticket.content} requested by ${ticket.requester} (${ticket.roomName}) assigned to ${ticket.assignee}`
 }
 
-function showTickets(tickets, states) {
+function compareUserName(userA, userB) {
+    if(!userA || !userB) {
+        return false
+    }
+    return userA.toLowerCase().startsWith(userB.toLowerCase())
+}
+
+function showTickets(tickets, states, userName) {
     var count = 0;
     var output = '\n'
-    for(var i = 1; i < tickets.lastId + 1; i++) {
-        if(states.indexOf(tickets[i].status) != -1) {
-            output += `ticket #${i}: ${showTicket(tickets[i])}\n`
-            count++
+    for(var i = 1; i <= tickets.lastId; i++) {
+        const strIndex = `${i}`
+        if(states.indexOf(tickets[strIndex].status) != -1) {
+            if(!userName ||
+                (compareUserName(tickets[strIndex].assignee, userName) ||
+                compareUserName(tickets[strIndex].requester, userName))) {
+                output += `ticket #${i}: ${showTicket(tickets[strIndex])}\n`
+                count++
+            }
         }
     }
-    if(!count) {
+    if(count === 0) {
         return 'nothing TODO!'
     }
     return output
