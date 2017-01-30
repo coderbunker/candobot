@@ -1,8 +1,9 @@
 const reloader = require('../reloader')
 const assert = require('assert')
 const fs = require('fs')
+const tmp = require('tmp');
 
-const TEST_FILE = './yo.js'
+const TEST_FILE = tmp.fileSync().name
 
 describe("reload reloads", function() {
     it("reloads if file is updated", function() {
