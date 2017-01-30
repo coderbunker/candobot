@@ -135,4 +135,9 @@ describe('support', function() {
         assert.match(reply, /ticket #1/)
         assert.match(reply, /do not forget to get different colors/)
     })
+
+    it('inventory', function() {
+        const reply = support.process(oneTicket(), message('what beer you got?'))
+        assert.match(reply, /Old Rasputin/)
+    })
 })

@@ -97,6 +97,11 @@ const actions = [
     regexp: /gimme\s*a*n*\s*(\w*)/i,
     reply: (message, output) => `${message.userName} ${output[0].toLowerCase()}${output.substr(1)}`,
 },
+{
+    action: (tickets, _message, type) => listType(type),
+    regexp: /what\s*(\w*) (you)? (got)?\??/i,
+    reply: (message, output) => `${output.join('\n')}`,
+},
 ]
 
 function createTicket() {
@@ -214,6 +219,11 @@ function addComment(ticket, comment) {
 var sources = {}
 
 function gimme(type) {
+    const saying = listType(type)[getRandomInt(0, sources[type].length)]
+    return saying
+}
+
+function listType(type) {
     const typePath = path.basename(`${type}.txt`)
     /* eslint-disable no-sync */
     if(!fs.existsSync(typePath)) {
@@ -224,8 +234,7 @@ function gimme(type) {
         const content = fs.readFileSync(typePath)
         sources[type] = content.toString().split('\n')
     }
-    const saying = sources[type][getRandomInt(0, sources[type].length)]
-    return saying
+    return sources[type]
 }
 
 /**
