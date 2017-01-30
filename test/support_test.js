@@ -66,4 +66,9 @@ describe("support", function() {
         const reply = support.process(tickets, message('gimme a compliment'))
         assert.equal(reply.substr(-1, 1), '.')
     })
+
+    it("gimme something that does not exist", function() {
+        const reply = support.process(tickets, message('gimme a unknown'))
+        assert.isTrue(reply.endsWith("can you try again?"))
+    })
 })
