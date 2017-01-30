@@ -32,24 +32,20 @@ function destination(message) {
 }
 
 function handler(config, data, message) {
-    try {
-        if(mine(content(message), config.prefix) &&
-           config.whitelisted.indexOf(roomName(message)) != -1) {
-            const processor = reload(config.processor)
-            if(!data.tickets) {
-                data.tickets = processor.load(data.store)
-            }
-            const reply = processor.process(data.tickets, {
-                content: cleanContent(config.prefix, message),
-                prefix: config.prefix,
-                roomName: roomName(message),
-                userName: userName(message),
-            })
-            processor.store(config.store, data.tickets)
-            destination(message).say(reply)
+    if(mine(content(message), config.prefix) &&
+        config.whitelisted.indexOf(roomName(message)) != -1) {
+        const processor = reload(config.processor)
+        if(!(data.tickets instanceof Object)) {
+            data.tickets = processor.load(config.store)
         }
-    } catch(err) {
-        destination(message).say(err)
+        const reply = processor.process(data.tickets, {
+            content: cleanContent(config.prefix, message),
+            prefix: config.prefix,
+            roomName: roomName(message),
+            userName: userName(message),
+        })
+        processor.store(config.store, data.tickets)
+        destination(message).say(reply)
     }
 }
 

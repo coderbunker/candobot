@@ -2,6 +2,7 @@
 
 const support = require('../support')
 const assert = require('chai').assert
+const tmp = require('tmp');
 
 const sample = {
     content: 'please get markers',
@@ -32,6 +33,8 @@ function message(content) {
     msg.content = content
     return msg
 }
+
+const TEST_FILE = tmp.fileSync().name
 
 describe('support', function() {
     it('ping', function() {
@@ -67,11 +70,16 @@ describe('support', function() {
 
     it('gimme a compliment', function() {
         const reply = support.process(tickets, message('gimme a compliment'))
-        assert.equal(reply.substr(-1, 1), '.')
+        assert.match(reply, /[\.!\?]$/)
     })
 
     it('gimme something that does not exist', function() {
         const reply = support.process(tickets, message('gimme a unknown'))
-        assert.isTrue(reply.endsWith('can you try again?'))
+        assert.equal(reply, "I don't know how to give you unknown!")
+    })
+
+    it('load and store working', function() {
+        support.store(TEST_FILE, {var: 4})
+        assert.equal(support.load(TEST_FILE).var, 4)
     })
 })

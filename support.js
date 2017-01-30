@@ -3,6 +3,14 @@
 const fs = require('fs')
 const path = require('path')
 
+function TicketError(message) {
+  this.name = 'TicketError';
+  this.message = message || 'Ticketing error';
+  this.stack = (new Error()).stack;
+}
+TicketError.prototype = Object.create(Error.prototype);
+TicketError.prototype.constructor = TicketError;
+
 const Sample = {
     assignee: null,
     closed: null,
@@ -17,75 +25,67 @@ const Sample = {
 const actions = [
 {
     action: (_tickets, _message) => 'DEFAULT ACTION',
-    regexp: /^$/gi,
+    regexp: /^$/i,
     reply: (message, _output) => `Yes ${message.userName}?`,
 },
 {
     action: (_tickets, _message) => help(),
-    regexp: /help/gi,
+    regexp: /help/i,
     reply: (message, output) => `\n${output}`,
 },
 {
     action: (tickets, _message, id) => closeTicket(tickets, id),
-    regexp: /close #([0-9]*)/gi,
+    regexp: /close #([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is closed`,
 },
 {
     action: (tickets, message, content) =>
         openTicket(tickets, message, content),
-    regexp: /please (.*)/gi,
+    regexp: /please (.*)/i,
     reply: (message, output) => `will ${output.content} (ticket #${output.id})`,
 },
 {
     action: (tickets, _message, id) => findTicket(tickets, id),
-    regexp: /show #([0-9]*)/gi,
+    regexp: /show #([0-9]*)/i,
     reply: (message, output) => showTicket(output),
 },
 {
     action: (tickets, message, id) => assign(tickets, id, message.userName),
-    regexp: /take #([0-9]*)/gi,
+    regexp: /take #([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
 {
     /* eslint-disable max-params */
     action: (tickets, _message, id, assignee) => assign(tickets, id, assignee),
-    regexp: /assign #([0-9]*) to (\w*)/gi,
+    regexp: /assign #([0-9]*) to (\w*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
 {
     action: (tickets, _message) => tickets,
-    regexp: /debug/gi,
+    regexp: /debug/i,
     reply: (message, output) => JSON.stringify(output, null, 4),
 },
 {
     action: (tickets, _message) => tickets,
-    regexp: /todo/gi,
+    regexp: /todo/i,
     reply: (message, output) => showTickets(output, ['open']),
 },
 {
     action: (tickets, _message) => tickets,
-    regexp: /history/gi,
+    regexp: /history/i,
     reply: (message, output) => showTickets(output, ['open', 'closed']),
 },
 {
     action: (tickets, _message) => forget(tickets),
-    regexp: /forget it/gi,
+    regexp: /forget it/i,
     reply: (message, output) => `deleted ${output} tickets`,
 },
 {
     action: (tickets, _message, type) => gimme(type),
-    regexp: /gimme\s*a*n*\s*(\w*)/gi,
+    regexp: /gimme\s*a*n*\s*(\w*)/i,
     reply: (message, output) => `${message.userName} ${output[0].toLowerCase()}${output.substr(1)}`,
 },
 ]
-
-function TicketError(message) {
-  this.name = 'TicketError';
-  this.message = message || 'Ticketing error';
-  this.stack = (new Error()).stack;
-}
-TicketError.prototype = Object.create(Error.prototype);
-TicketError.prototype.constructor = TicketError;
 
 function createTicket() {
     return JSON.parse(JSON.stringify(Sample))
@@ -169,9 +169,14 @@ function getRandomInt(min, max) {
 var sources = {}
 
 function gimme(type) {
+    const typePath = path.basename(`${type}.txt`)
+    /* eslint-disable no-sync */
+    if(!fs.existsSync(typePath)) {
+        throw new TicketError(`I don't know how to give you ${type}!`)
+    }
     if(!sources[type]) {
         /* eslint-disable no-sync */
-        const content = fs.readFileSync(path.basename(`${type}.txt`))
+        const content = fs.readFileSync(typePath)
         sources[type] = content.toString().split('\n')
     }
     const saying = sources[type][getRandomInt(0, sources[type].length)]
@@ -179,7 +184,7 @@ function gimme(type) {
 }
 
 /**
- * Callback for find.
+ * Callback for Array.find.
  * @param action action object
  * @this object with content and result
  * @returns true if match regexp, false otherwise
@@ -201,14 +206,18 @@ function process(tickets, message) {
         result: null
     }
     const action = actions.find(searchRegexp, findParams)
+
     var reply;
     if(action) {
-        var output = action.action(tickets, message, ...findParams.result)
-        // If(!(output instanceof Object) && !output) {
-        //     Reply = `${JSON.stringify(action)} did not return any output`
-        // } else {
+        try {
+            var output = action.action(tickets, message, ...findParams.result)
             reply = `${action.reply.bind(output)(message, output)}`
-        // }
+        } catch(e) {
+            if(e instanceof TicketError) {
+                return e.message
+            }
+            throw e
+        }
     } else {
         reply = `I don't understand: ${message.content}, can you try again?`
     }
@@ -227,16 +236,25 @@ function store(storePath, tickets) {
 }
 
 function load(storePath) {
-    try {
+    /* eslint-disable no-sync */
+    if(fs.existsSync(storePath)) {
         /* eslint-disable no-sync */
-        const datastore = fs.readFileSync(storePath)
-        return JSON.parse(datastore)
-    } catch(e) {
-        return createTickets()
+        const datastore = fs.readFileSync(storePath).toString()
+        try {
+            return JSON.parse(datastore)
+        } catch(e) {
+            if(e instanceof SyntaxError) {
+               throw new TicketError(`invalid content of file: ${storePath}`)
+            } else {
+                throw e
+            }
+        }
     }
+    return createTickets()
 }
 
 module.exports = {
+    TicketError,
     createTickets,
     load,
     openTicket,
