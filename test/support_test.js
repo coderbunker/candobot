@@ -129,4 +129,10 @@ describe('support', function() {
         assert.notMatch(reply, /ticket #1/)
         assert.match(reply, /ticket #2/)
     })
+
+    it('Add comment to ticket', function() {
+        const reply = support.process(oneTicket(), message('ticket #1 do not forget to get different colors'))
+        assert.match(reply, /ticket #1/)
+        assert.match(reply, /do not forget to get different colors/)
+    })
 })

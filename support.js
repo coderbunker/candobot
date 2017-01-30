@@ -14,6 +14,7 @@ TicketError.prototype.constructor = TicketError;
 const Sample = {
     assignee: null,
     closed: null,
+    comments: [],
     content: null,
     created: null,
     id: null,
@@ -35,7 +36,7 @@ const actions = [
 },
 {
     action: (tickets, _message, id) => closeTicket(tickets, id),
-    regexp: /close #([0-9]*)/i,
+    regexp: /close #?([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is closed`,
 },
 {
@@ -46,18 +47,24 @@ const actions = [
 },
 {
     action: (tickets, _message, id) => findTicket(tickets, id),
-    regexp: /show #([0-9]*)/i,
+    regexp: /show #?([0-9]*)/i,
     reply: (message, output) => showTicket(output),
 },
 {
+    /* eslint-disable max-params */
+    action: (tickets, _m, id, comment) => [findTicket(tickets, id), comment],
+    regexp: /ticket #?([0-9]*) (.*)$/i,
+    reply: (message, output) => addComment(output[0], output[1]),
+},
+{
     action: (tickets, message, id) => assign(tickets, id, message.userName),
-    regexp: /take #([0-9]*)/i,
+    regexp: /take #?([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
 {
     /* eslint-disable max-params */
     action: (tickets, _message, id, assignee) => assign(tickets, id, assignee),
-    regexp: /assign #([0-9]*) to (\w*)/i,
+    regexp: /assign #?([0-9]*) to (\w*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
 {
@@ -126,7 +133,21 @@ function openTicket(tickets, message, content) {
 }
 
 function showTicket(ticket) {
-    return `${ticket.content} requested by ${ticket.requester} (${ticket.roomName}) assigned to ${ticket.assignee}`
+    var main = `ticket #${ticket.id}: ${ticket.content}`
+    if(ticket.roomName) {
+        main += ` (${ticket.roomName})`
+    }
+    if(ticket.requester) {
+        main += ` requested by ${ticket.requester}`
+    }
+    if(ticket.assignee) {
+        main += ` assigned to ${ticket.assignee}`
+    }
+    if(ticket.comments && ticket.comments.length) {
+        main += ' -- '
+        main += ticket.comments.join('; ')
+    }
+    return main
 }
 
 function compareUserName(userA, userB) {
@@ -145,7 +166,7 @@ function showTickets(tickets, states, userName) {
             if(!userName ||
                 (compareUserName(tickets[strIndex].assignee, userName) ||
                 compareUserName(tickets[strIndex].requester, userName))) {
-                output += `ticket #${i}: ${showTicket(tickets[strIndex])}\n`
+                output += `${showTicket(tickets[strIndex])}\n`
                 count++
             }
         }
@@ -183,6 +204,13 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * range);
 }
 
+function addComment(ticket, comment) {
+    if(!(ticket.comments instanceof Array)) {
+        ticket.comments = []
+    }
+    ticket.comments.push(comment)
+    return showTicket(ticket)
+}
 var sources = {}
 
 function gimme(type) {
