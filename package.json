@@ -9,13 +9,21 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "eslint": "^3.14.1",
     "mocha": "^3.2.0",
+    "precommit-hook": "^3.0.0",
     "tmp": "0.0.31"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha",
-    "start": "node bot.js"
+    "start": "node bot.js",
+    "lint": "node_modules/eslint/bin/eslint.js *.js",
+    "validate": "npm ls"
   },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
   "author": "Ricky Ng-Adam <rngadam@gmail.com>",
   "license": "ISC"
 }

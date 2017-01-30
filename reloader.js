@@ -7,9 +7,9 @@ const updates = {}
 const modules = {}
 
 function reloadIfUpdated(name) {
+    /* eslint-disable no-sync */
     const mtime = fs.statSync(name).mtime.getTime()
     if(!updates[name] || updates[name] < mtime) {
-        console.log(`RELOADING ${name}`)
         updates[name] = mtime
         modules[name] = reload(name)
     }

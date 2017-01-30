@@ -15,43 +15,41 @@ function content(message) {
 }
 
 function cleanContent(prefix, message) {
-    return content(message).substr(prefix.length).trim()
+    return content(message)
+        .substr(prefix.length)
+        .trim()
 }
 
-function messageString(message) {
-    return `${roomName(message)}/${userName(message)}: ${content(message)}`
-}
-
-function mine(content, prefix) {
-    return content.substr(0, prefix.length).toLowerCase().startsWith(prefix)
+function mine(str, prefix) {
+    return str
+        .substr(0, prefix.length)
+        .toLowerCase()
+        .startsWith(prefix)
 }
 
 function destination(message) {
-    return message.room()? message.room() : message.from()
+    return message.room() ? message.room() : message.from()
 }
 
-function handler(data, message) {
-    console.log(messageString(message))
+function handler(config, data, message) {
     try {
-        var config = reload('./config.json')
-        if(mine(content(message), config.prefix) && config.whitelisted.indexOf(roomName(message)) != -1) {
-            console.log(`Captured message: ${message}`)
-
-            const processor = reload('./support.js')
+        if(mine(content(message), config.prefix) &&
+           config.whitelisted.indexOf(roomName(message)) != -1) {
+            const processor = reload(config.processor)
             if(!data.tickets) {
                 data.tickets = processor.load(data.store)
-            }        
+            }
             const reply = processor.process(data.tickets, {
+                content: cleanContent(config.prefix, message),
                 prefix: config.prefix,
-                roomName: roomName(message), 
-                userName: userName(message), 
-                content: cleanContent(config.prefix, message)
+                roomName: roomName(message),
+                userName: userName(message),
             })
             processor.store(config.store, data.tickets)
             destination(message).say(reply)
         }
-    } catch(e) {
-        destination(message).say(e)
+    } catch(err) {
+        destination(message).say(err)
     }
 }
 

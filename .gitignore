@@ -7,3 +7,4 @@ tickets.json
 **.swp
 .v8flags.*
 *.txt
+out/**
