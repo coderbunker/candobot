@@ -18,7 +18,9 @@
     "test": "node_modules/.bin/mocha",
     "start": "node bot.js",
     "lint": "node_modules/eslint/bin/eslint.js *.js",
-    "validate": "npm ls"
+    "validate": "npm ls",
+    "watch": "node_modules/.bin/mocha --watch"
+
   },
   "pre-commit": [
     "lint",

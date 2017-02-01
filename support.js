@@ -298,7 +298,7 @@ function load(storePath) {
             return JSON.parse(datastore)
         } catch(e) {
             if(e instanceof SyntaxError) {
-               throw new TicketError(`invalid content of file: ${storePath}`)
+                throw new TicketError(`invalid content of file: ${storePath}`)
             } else {
                 throw e
             }

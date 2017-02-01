@@ -6,7 +6,7 @@ const tmp = require('tmp');
 
 const sample = {
     content: 'please get markers',
-    prefix: 'candra',
+    prefix: 'cando',
     roomName: 'MyRoom',
     userName: 'Ricky',
 }
@@ -67,23 +67,23 @@ const TEST_FILE = tmp.fileSync().name
 describe('support', function() {
     it('ping', function() {
         const reply = support.process(oneTicket(), message(''))
-        assert.equal(reply, '#candra: Yes Ricky?')
+        assert.equal(reply, '#cando: Yes Ricky?')
     })
 
     it('close', function() {
         const reply = support.process(oneTicket(), message('close #1'))
-        assert.equal(reply, '#candra: ticket #1 is closed')
+        assert.equal(reply, '#cando: ticket #1 is closed')
     })
 
     it('debug', function() {
         const tickets = oneTicket()
         const reply = support.process(tickets, message('debug'))
-        assert.deepEqual(JSON.parse(reply.slice('#candra: '.length)), tickets)
+        assert.deepEqual(JSON.parse(reply.slice('#cando: '.length)), tickets)
     })
 
     it('invalid', function() {
         const reply = support.process(oneTicket(), message('handsome'))
-        assert.equal(reply, '#candra: I don\'t understand: handsome, can you try again?')
+        assert.equal(reply, '#cando: I don\'t understand: handsome, can you try again?')
     })
 
     it('help', function() {
@@ -94,7 +94,7 @@ describe('support', function() {
     it('forget it', function() {
         const tickets = oneTicket()
         const reply = support.process(tickets, message('forget it'))
-        assert.equal(reply, '#candra: deleted 1 tickets')
+        assert.equal(reply, '#cando: deleted 1 tickets')
         assert.equal(tickets.lastId, 0)
     })
 
@@ -115,7 +115,7 @@ describe('support', function() {
 
     it('TODO empty', function() {
         const reply = support.process({}, message('todo'))
-        assert.equal(reply, '#candra: nothing TODO!')
+        assert.equal(reply, '#cando: nothing TODO!')
     })
 
     it('TODO with ticket specific mine', function() {

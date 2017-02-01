@@ -24,7 +24,7 @@ const TEST_FILE = tmp.tmpNameSync()
 
 const config = {
     'management': 'Agora - management',
-    'prefix': 'candra',
+    'prefix': 'cando',
     'processor': './support.js',
     'store': TEST_FILE,
     'whitelisted': [
@@ -43,17 +43,17 @@ describe('handler', function() {
         const message = createWeChatyMessage(
             'Ricky',
             'test room',
-            'candra please add ticket',
+            'cando please add ticket',
             say)
 
         // First ticket
         handler(config, data, message)
-        assert.equal(sayValue, '#candra: will add ticket (ticket #1)')
+        assert.equal(sayValue, '#cando: will add ticket (ticket #1)')
         assert.instanceOf(data.tickets['1'], Object)
 
         // Second ticket
         handler(config, data, message)
-        assert.equal(sayValue, '#candra: will add ticket (ticket #2)')
+        assert.equal(sayValue, '#cando: will add ticket (ticket #2)')
         assert.equal(data.tickets.lastId, 2)
         assert.instanceOf(data.tickets['2'], Object)
     })
