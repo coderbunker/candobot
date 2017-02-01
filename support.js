@@ -97,6 +97,11 @@ const actions = [
     reply: (message, output) => `deleted ${output} tickets`,
 },
 {
+    action: (_data, _message, _type) => true,
+    regexp: /gimme high five/i,
+    reply: (_message, _output) => 'ヘ( ^o^)ノ＼(^_^ )',
+},
+{
     action: (data, _message, type) => gimme(data.fs, type),
     regexp: /gimme\s*a*n*\s*(\w*)/i,
     reply: (message, output) => `${message.userName} here have a ${output}`,

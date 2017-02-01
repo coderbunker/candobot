@@ -119,6 +119,11 @@ describe('support', function() {
         assert.equal(reply, '#cando: Ricky here have a compliment')
     })
 
+    it('gimme high five', function() {
+        const reply = support.process(emptyData(), message('gimme high five'))
+        assert.equal(reply, '#cando: ヘ( ^o^)ノ＼(^_^ )')
+    })
+
     it('gimme something that does not exist', function() {
         const data = emptyData()
         data.fs = {
