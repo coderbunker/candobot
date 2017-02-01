@@ -18,14 +18,18 @@
     "test": "node_modules/.bin/mocha",
     "start": "node bot.js",
     "lint": "node_modules/eslint/bin/eslint.js *.js",
-    "validate": "npm ls",
+    "validate": "npm ls --depth 0",
     "watch": "node_modules/.bin/mocha --watch"
 
   },
   "pre-commit": [
     "lint",
-    "test"
+    "test",
+    "validate"
   ],
   "author": "Ricky Ng-Adam <rngadam@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">= 6.9.0"
+  }
 }
