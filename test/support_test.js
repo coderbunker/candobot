@@ -78,7 +78,7 @@ const TEST_FILE = tmp.fileSync().name
 describe('support', function() {
     it('ping', function() {
         const reply = support.process(oneTicket(), message(''))
-        assert.equal(reply, '#cando: Yes Ricky?')
+        assert.equal(reply, '#cando: Yes Ricky? Ask me for help if you need me.')
     })
 
     it('close', function() {
@@ -94,7 +94,7 @@ describe('support', function() {
 
     it('invalid', function() {
         const reply = support.process(oneTicket(), message('handsome'))
-        assert.equal(reply, '#cando: I don\'t understand: handsome, can you try again?')
+        assert.equal(reply, '#cando: I don\'t understand: "handsome". Can you try again?')
     })
 
     it('help', function() {
@@ -113,10 +113,10 @@ describe('support', function() {
         const data = emptyData()
         data.fs = {
             existsSync: () => true,
-            readFileSync: () => 'this is the only compliment'
+            readFileSync: () => 'compliment\ncompliment\n'
         }
         const reply = support.process(data, message('gimme a compliment'))
-        assert.equal(reply, '#cando: Ricky this is the only compliment')
+        assert.equal(reply, '#cando: Ricky here have a compliment')
     })
 
     it('gimme something that does not exist', function() {
@@ -163,6 +163,16 @@ describe('support', function() {
             readFileSync: () => 'Chouffe\nBudweiser\n'
         }
         const reply = support.process(data, message('what beer you got?'))
-        assert.equal(reply, '#cando: Chouffe\nBudweiser\n')
+        assert.equal(reply, '#cando: \nChouffe\nBudweiser')
+    })
+
+    it('what event', function() {
+        const data = emptyData()
+        data.fs = {
+            existsSync: () => true,
+            readFileSync: () => 'event1\nevent2\n'
+        }
+        const reply = support.process(data, message('What events will there be at the bunker?'))
+        assert.equal(reply, '#cando: \nevent1\nevent2')
     })
 })

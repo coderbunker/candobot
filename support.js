@@ -28,7 +28,7 @@ const actions = [
 {
     action: (_data, _message) => 'DEFAULT ACTION',
     regexp: /^$/i,
-    reply: (message, _output) => `Yes ${message.userName}?`,
+    reply: (message, _output) => `Yes ${message.userName}? Ask me for help if you need me.`,
 },
 {
     action: (_data, _message) => help(),
@@ -99,12 +99,12 @@ const actions = [
 {
     action: (data, _message, type) => gimme(data.fs, type),
     regexp: /gimme\s*a*n*\s*(\w*)/i,
-    reply: (message, output) => `${message.userName} ${output[0].toLowerCase()}${output.substr(1)}`,
+    reply: (message, output) => `${message.userName} here have a ${output}`,
 },
 {
     action: (data, _message, type) => listType(data.fs, type),
-    regexp: /what\s*(\w*) (you)? (got)?\??/i,
-    reply: (message, output) => `${output.join('\n')}`,
+    regexp: /what\s*(\w*)s?/i,
+    reply: (message, output) => `\n${output.join('\n')}`,
 },
 ]
 
@@ -233,7 +233,10 @@ function listType(injectedFs, type) {
     if(!sources[type]) {
         /* eslint-disable no-sync */
         const content = injectedFs.readFileSync(typePath)
-        sources[type] = content.toString().split('\n')
+        sources[type] = content
+            .toString()
+            .trim()
+            .split('\n')
     }
     return sources[type]
 }
@@ -276,7 +279,7 @@ function process(data, message) {
             throw e
         }
     } else {
-        reply = `I don't understand: ${message.content}, can you try again?`
+        reply = `I don't understand: "${message.content}". Can you try again?`
     }
     return `#${message.prefix}: ${reply}`
 }
