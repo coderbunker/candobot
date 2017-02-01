@@ -98,6 +98,11 @@ const actions = [
 },
 {
     action: (_data, _message, _type) => true,
+    regexp: /meaning of life/i,
+    reply: (_message, _output) => '42',
+},
+{
+    action: (_data, _message, _type) => true,
     regexp: /gimme high five/i,
     reply: (_message, _output) => 'ヘ( ^o^)ノ＼(^_^ )',
 },
