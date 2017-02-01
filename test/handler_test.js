@@ -32,14 +32,19 @@ const config = {
     ],
 }
 
+var sayValue = null
+function say(msg) {
+    sayValue = msg
+}
 
 describe('handler', function() {
+    beforeEach(function () {
+        sayValue = null
+    })
+
     it('handles multiple class and storage', function() {
-        const data = {}
-        var sayValue = null
-        function say(msg) {
-            sayValue = msg
-        }
+        const data = {tickets: {lastId: 0}}
+
         const message = createWeChatyMessage(
             'Ricky',
             'test room',
@@ -56,5 +61,26 @@ describe('handler', function() {
         assert.equal(sayValue, '#cando: will add ticket (ticket #2)')
         assert.equal(data.tickets.lastId, 2)
         assert.instanceOf(data.tickets['2'], Object)
+    })
+
+    it('non-whitelisted room is ignored', function() {
+        const message = createWeChatyMessage(
+            'Ricky',
+            'no valid test room',
+            'cando please add ticket',
+            () => {
+                throw new Error('should not be called')
+            })
+        handler(config, {tickets: {lastId: 0}}, message)
+    })
+
+    it('room with prefix in name is accepted', function() {
+        const message = createWeChatyMessage(
+            'Ricky',
+            'CANDO testing',
+            'cando please add ticket',
+            say)
+        handler(config, {tickets: {lastId: 0}}, message)
+        assert.equal(sayValue, '#cando: will add ticket (ticket #1)')
     })
 })

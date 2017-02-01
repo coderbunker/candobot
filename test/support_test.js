@@ -13,43 +13,54 @@ const sample = {
 
 function oneTicket() {
     return {
-        '1': {
-            assignee: null,
-            closed: null,
-            content: 'content',
-            id: '1',
-            requester: 'Ricky',
-            roomName: 'MyRoom',
-            status: 'open',
-        },
-        lastId: 1,
+        tickets: {
+            '1': {
+                assignee: null,
+                closed: null,
+                content: 'content',
+                id: '1',
+                requester: 'Ricky',
+                roomName: 'MyRoom',
+                status: 'open',
+            },
+            lastId: 1,
+        }
     }
 }
 
 function twoTickets() {
     return {
-        '1': {
-            assignee: null,
-            closed: null,
-            content: 'content',
-            id: '1',
-            requester: 'Ricky',
-            roomName: 'MyRoom',
-            status: 'open',
-        },
-        '2': {
-            assignee: null,
-            closed: null,
-            content: 'content',
-            id: '2',
-            requester: 'Dmitry',
-            roomName: 'MyRoom',
-            status: 'open',
-        },
-        lastId: 2,
+        tickets: {
+            '1': {
+                assignee: null,
+                closed: null,
+                content: 'content',
+                id: '1',
+                requester: 'Ricky',
+                roomName: 'MyRoom',
+                status: 'open',
+            },
+            '2': {
+                assignee: null,
+                closed: null,
+                content: 'content',
+                id: '2',
+                requester: 'Dmitry',
+                roomName: 'MyRoom',
+                status: 'open',
+            },
+            lastId: 2,
+        }
     }
 }
 
+function emptyData() {
+    return {
+        tickets: {
+            lastId: 0
+        }
+    }
+}
 
 function copy(sampleObject) {
     return JSON.parse(JSON.stringify(sampleObject))
@@ -76,9 +87,9 @@ describe('support', function() {
     })
 
     it('debug', function() {
-        const tickets = oneTicket()
-        const reply = support.process(tickets, message('debug'))
-        assert.deepEqual(JSON.parse(reply.slice('#cando: '.length)), tickets)
+        const data = oneTicket()
+        const reply = support.process(data, message('debug'))
+        assert.deepEqual(JSON.parse(reply.slice('#cando: '.length)), data.tickets)
     })
 
     it('invalid', function() {
@@ -92,29 +103,38 @@ describe('support', function() {
     })
 
     it('forget it', function() {
-        const tickets = oneTicket()
-        const reply = support.process(tickets, message('forget it'))
+        const data = oneTicket()
+        const reply = support.process(data, message('forget it'))
         assert.equal(reply, '#cando: deleted 1 tickets')
-        assert.equal(tickets.lastId, 0)
+        assert.equal(data.tickets.lastId, 0)
     })
 
     it('gimme a compliment', function() {
-        const reply = support.process({}, message('gimme a compliment'))
-        assert.match(reply, /[\.!?)]$/)
+        const data = emptyData()
+        data.fs = {
+            existsSync: () => true,
+            readFileSync: () => 'this is the only compliment'
+        }
+        const reply = support.process(data, message('gimme a compliment'))
+        assert.equal(reply, '#cando: Ricky this is the only compliment')
     })
 
     it('gimme something that does not exist', function() {
-        const reply = support.process({}, message('gimme a unknown'))
+        const data = emptyData()
+        data.fs = {
+            existsSync: () => false
+        }
+        const reply = support.process(data, message('gimme a unknown'))
         assert.equal(reply, "I don't know how to give you unknown!")
     })
 
     it('load and store working', function() {
-        support.store(TEST_FILE, {var: 4})
-        assert.equal(support.load(TEST_FILE).var, 4)
+        support.store(TEST_FILE, {lastId: 4})
+        assert.equal(support.load(TEST_FILE).lastId, 4)
     })
 
     it('TODO empty', function() {
-        const reply = support.process({}, message('todo'))
+        const reply = support.process(emptyData(), message('todo'))
         assert.equal(reply, '#cando: nothing TODO!')
     })
 
@@ -137,7 +157,12 @@ describe('support', function() {
     })
 
     it('inventory', function() {
-        const reply = support.process(oneTicket(), message('what beer you got?'))
-        assert.match(reply, /Old Rasputin/)
+        const data = emptyData()
+        data.fs = {
+            existsSync: () => true,
+            readFileSync: () => 'Chouffe\nBudweiser\n'
+        }
+        const reply = support.process(data, message('what beer you got?'))
+        assert.equal(reply, '#cando: Chouffe\nBudweiser\n')
     })
 })

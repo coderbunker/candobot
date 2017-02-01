@@ -1,7 +1,8 @@
 'use strict'
 
 const reload = require('./reloader')
-
+const fs = require('fs'
+)
 function roomName(message) {
     return message.room() ? message.room().topic() : 'self'
 }
@@ -31,14 +32,22 @@ function destination(message) {
     return message.room() ? message.room() : message.from()
 }
 
+function isValidRoom(config, currentRoomName) {
+   return config.whitelisted.indexOf(currentRoomName) != -1 ||
+        currentRoomName.toLowerCase().indexOf(config.prefix.toLowerCase()) != -1
+}
+
 function handler(config, data, message) {
     if(mine(content(message), config.prefix) &&
-        config.whitelisted.indexOf(roomName(message)) != -1) {
+        isValidRoom(config, roomName(message))) {
         const processor = reload(config.processor)
         if(!(data.tickets instanceof Object)) {
             data.tickets = processor.load(config.store)
         }
-        const reply = processor.process(data.tickets, {
+        if(!data.fs) {
+            data.fs = fs
+        }
+        const reply = processor.process(data, {
             content: cleanContent(config.prefix, message),
             prefix: config.prefix,
             roomName: roomName(message),
