@@ -1,8 +1,8 @@
 'use strict'
 
 const reload = require('./reloader')
-const fs = require('fs'
-)
+const fs = require('fs')
+
 function roomName(message) {
     return message.room() ? message.room().topic() : 'self'
 }

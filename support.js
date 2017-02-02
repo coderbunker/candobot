@@ -3,26 +3,16 @@
 const fs = require('fs')
 const path = require('path')
 const assert = require('assert')
+const reload = require('./reloader')
+const ticket = reload('./ticket.js')
 
-function TicketError(message) {
-  this.name = 'TicketError';
+function ProcessError(message) {
+  this.name = 'ProcessError';
   this.message = message || 'Ticketing error';
   this.stack = (new Error()).stack;
 }
-TicketError.prototype = Object.create(Error.prototype);
-TicketError.prototype.constructor = TicketError;
-
-const Sample = {
-    assignee: null,
-    closed: null,
-    comments: [],
-    content: null,
-    created: null,
-    id: null,
-    requester: null,
-    roomName: null,
-    status: 'open',
-}
+ProcessError.prototype = Object.create(Error.prototype);
+ProcessError.prototype.constructor = ProcessError;
 
 const actions = [
 {
@@ -36,36 +26,39 @@ const actions = [
     reply: (message, output) => `\n${output}`,
 },
 {
-    action: (data, _message, id) => closeTicket(data.tickets, id),
+    action: (data, _message, id) => ticket.closeTicket(data.tickets, id),
     regexp: /close #?([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is closed`,
 },
 {
     action: (data, message, content) =>
-        openTicket(data.tickets, message, content),
+        ticket.openTicket(data.tickets, message, content),
     regexp: /please (.*)/i,
     reply: (message, output) => `will ${output.content} (ticket #${output.id})`,
 },
 {
-    action: (data, _message, id) => findTicket(data.tickets, id),
+    action: (data, _message, id) => ticket.findTicket(data.tickets, id),
     regexp: /show #?([0-9]*)/i,
-    reply: (message, output) => showTicket(output),
+    reply: (message, output) => ticket.showTicket(output),
 },
 {
     /* eslint-disable max-params */
-    action: (data, _m, id, comment) => [findTicket(data.tickets, id), comment],
+    action: (data, _m, id, comment) => [
+        ticket.findTicket(data.tickets, id), comment
+    ],
     regexp: /ticket #?([0-9]*) (.*)$/i,
-    reply: (message, output) => addComment(output[0], output[1]),
+    reply: (message, output) => ticket.addComment(output[0], output[1]),
 },
 {
-    action: (data, message, id) => assign(data.tickets, id, message.userName),
+    action: (data, message, id) => ticket.assign(
+        data.tickets, id, message.userName),
     regexp: /take #?([0-9]*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
 {
     /* eslint-disable max-params */
     action: (data, _message, id, assignee) =>
-        assign(data.tickets, id, assignee),
+        ticket.assign(data.tickets, id, assignee),
     regexp: /assign #?([0-9]*) to (\w*)/i,
     reply: (message, output) => `ticket #${output.id} is assigned to ${output.assignee}`,
 },
@@ -79,20 +72,20 @@ const actions = [
         data.tickets, username.toLowerCase()
     ],
     regexp: /todo ?(\w*)/i,
-    reply: (message, output) => showTickets(output[0], ['open'], output[1]),
+    reply: (message, output) => ticket.showTickets(output[0], ['open'], output[1]),
 },
 {
     action: (data, _message) => data.tickets,
     regexp: /mine/i,
-    reply: (message, output) => showTickets(output, ['open'], message.userName),
+    reply: (message, output) => ticket.showTickets(output, ['open'], message.userName),
 },
 {
     action: (data, _message) => data.tickets,
     regexp: /history/i,
-    reply: (message, output) => showTickets(output, ['open', 'closed']),
+    reply: (message, output) => ticket.showTickets(output, ['open', 'closed']),
 },
 {
-    action: (data, _message) => forget(data.tickets),
+    action: (data, _message) => ticket.forget(data.tickets),
     regexp: /forget it/i,
     reply: (message, output) => `deleted ${output} tickets`,
 },
@@ -128,113 +121,10 @@ const actions = [
 },
 ]
 
-function createTicket() {
-    return JSON.parse(JSON.stringify(Sample))
-}
-
-function findTicket(tickets, id) {
-    if(!id) {
-        throw new TicketError('Invalid id')
-    }
-    if(!tickets[id]) {
-        throw new TicketError(`Not found: #${id}`)
-    }
-    return tickets[id]
-}
-
-function closeTicket(tickets, id) {
-    const ticket = findTicket(tickets, id)
-    ticket.status = 'closed'
-    ticket.closed = Date.now()
-    return ticket
-}
-
-function openTicket(tickets, message, content) {
-    const newTicket = createTicket()
-    tickets.lastId += 1
-    newTicket.id = `${tickets.lastId}`
-    newTicket.created = new Date()
-    newTicket.content = content
-    newTicket.roomName = message.roomName
-    newTicket.requester = message.userName
-    tickets[newTicket.id] = newTicket
-    return tickets[newTicket.id]
-}
-
-function showTicket(ticket) {
-    var main = `ticket #${ticket.id}: ${ticket.content}`
-    if(ticket.roomName) {
-        main += ` (${ticket.roomName})`
-    }
-    if(ticket.requester) {
-        main += ` requested by ${ticket.requester}`
-    }
-    if(ticket.assignee) {
-        main += ` assigned to ${ticket.assignee}`
-    }
-    if(ticket.comments && ticket.comments.length) {
-        main += ' -- '
-        main += ticket.comments.join('; ')
-    }
-    return main
-}
-
-function compareUserName(userA, userB) {
-    if(!userA || !userB) {
-        return false
-    }
-    return userA.toLowerCase().startsWith(userB.toLowerCase())
-}
-
-function showTickets(tickets, states, userName) {
-    var count = 0;
-    var output = '\n'
-    for(var i = 1; i <= tickets.lastId; i++) {
-        const strIndex = `${i}`
-        if(states.indexOf(tickets[strIndex].status) != -1) {
-            if(!userName ||
-                (compareUserName(tickets[strIndex].assignee, userName) ||
-                compareUserName(tickets[strIndex].requester, userName))) {
-                output += `${showTicket(tickets[strIndex])}\n`
-                count++
-            }
-        }
-    }
-    if(count === 0) {
-        return 'nothing TODO!'
-    }
-    return output
-}
-
-function forget(tickets) {
-    if(!tickets.lastId) {
-        return 'nothing to remove!'
-    }
-    const lastId = tickets.lastId
-    for(var i = 1; i <= tickets.lastId; i++) {
-       delete tickets[i]
-    }
-    tickets.lastId = 0
-    return lastId
-}
-
-function assign(tickets, id, assignee) {
-     const ticket = findTicket(tickets, id)
-     ticket.assignee = assignee
-     return ticket
-}
-
 function help() {
     return actions.map((action) => `${action.regexp.toString()}`).join('\n')
 }
 
-function addComment(ticket, comment) {
-    if(!(ticket.comments instanceof Array)) {
-        ticket.comments = []
-    }
-    ticket.comments.push(comment)
-    return showTicket(ticket)
-}
 var sources = {}
 
 function gimme(injectedFs, type) {
@@ -248,7 +138,7 @@ function listType(injectedFs, type) {
     const typePath = path.join('node_modules', 'candobot-data', 'data', path.basename(`${type}.txt`))
     /* eslint-disable no-sync */
     if(!injectedFs.existsSync(typePath)) {
-        throw new TicketError(`I don't know how to give you ${type}!`)
+        throw new ProcessError(`I don't know how to give you ${type}!`)
     }
     if(!sources[type]) {
         /* eslint-disable no-sync */
@@ -279,7 +169,7 @@ function searchRegexp(action) {
 }
 
 function process(data, message) {
-    assert(isValidTickets(data.tickets),
+    assert(ticket.isValidTickets(data.tickets),
         `Expecting valid tickets data key, got: ${JSON.stringify(data.tickets)}`)
     const findParams = {
         content: message.content,
@@ -293,7 +183,7 @@ function process(data, message) {
             var output = action.action(data, message, ...findParams.result)
             reply = `${action.reply.bind(output)(message, output)}`
         } catch(e) {
-            if(e instanceof TicketError) {
+            if(e instanceof ProcessError) {
                 return e.message
             }
             throw e
@@ -304,61 +194,17 @@ function process(data, message) {
     return `#${message.prefix}: ${reply}`
 }
 
-function createTickets() {
-    return {
-        lastId: 0
-    }
-}
-
-function isValidTickets(tickets) {
-    if(!tickets) {
-        return false
-    }
-    if(!(tickets instanceof Object)) {
-        return false
-    }
-    if(!Number.isInteger(tickets.lastId)) {
-        return false
-    }
-    return true
-}
-
 function store(storePath, tickets) {
-    if(!isValidTickets(tickets)) {
-        throw new TicketError(`refusing to write invalid data: ${JSON.stringify(tickets)}`)
-    }
-    /* eslint-disable no-sync */
-    fs.writeFileSync(storePath, JSON.stringify(tickets, null, 4))
+    return ticket.store(fs, storePath, tickets)
 }
 
 function load(storePath) {
-    /* eslint-disable no-sync */
-    if(fs.existsSync(storePath)) {
-        /* eslint-disable no-sync */
-        const datastore = fs.readFileSync(storePath).toString()
-        try {
-            const tickets = JSON.parse(datastore)
-            if(!isValidTickets(tickets)) {
-                throw new TicketError(`does not contain valid data: ${storePath}`)
-            }
-            return tickets
-        } catch(e) {
-            if(e instanceof SyntaxError) {
-                throw new TicketError(`invalid content of file: ${storePath}`)
-            } else {
-                throw e
-            }
-        }
-    }
-    return createTickets()
+    return ticket.load(fs, storePath)
 }
 
 module.exports = {
-    TicketError,
-    createTickets,
-    isValidTickets,
+    ProcessError,
     load,
-    openTicket,
     process,
     store,
 }
