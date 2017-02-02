@@ -4,6 +4,7 @@
   "description": "support tickets bot",
   "main": "bot.js",
   "dependencies": {
+    "candobot-data": "git+ssh://git@github.com/coderbunker/candobot-data.git",
     "require-reload": "^0.2.2",
     "wechaty": "^0.7.3"
   },
@@ -20,13 +21,16 @@
     "lint": "node_modules/eslint/bin/eslint.js *.js",
     "validate": "npm ls --depth 0",
     "watch": "node_modules/.bin/mocha --watch"
-
   },
   "pre-commit": [
     "lint",
     "test",
     "validate"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/coderbunker/candobot.git"
+  },
   "author": "Ricky Ng-Adam <rngadam@gmail.com>",
   "license": "ISC",
   "engines": {

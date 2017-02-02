@@ -161,6 +161,11 @@ describe('support', function() {
         assert.match(reply, /do not forget to get different colors/)
     })
 
+    it('generic question', function() {
+        const reply = support.process(oneTicket(), message('why are you so bad?'))
+        assert.match(reply, /I don't understand the question/)
+    })
+
     it('inventory', function() {
         const data = emptyData()
         data.fs = {

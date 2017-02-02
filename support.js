@@ -116,6 +116,11 @@ const actions = [
     regexp: /what\s*(\w*)s?/i,
     reply: (message, output) => `\n${output.join('\n')}`,
 },
+{
+    action: (_data, _message, _type) => true,
+    regexp: /.*\?$/i,
+    reply: (message, _output) => `${message.userName} I don't understand the question`,
+},
 ]
 
 function createTicket() {
@@ -235,7 +240,7 @@ function gimme(injectedFs, type) {
 }
 
 function listType(injectedFs, type) {
-    const typePath = path.basename(`${type}.txt`)
+    const typePath = path.join('node_modules', 'candobot-data', 'data', path.basename(`${type}.txt`))
     /* eslint-disable no-sync */
     if(!injectedFs.existsSync(typePath)) {
         throw new TicketError(`I don't know how to give you ${type}!`)
