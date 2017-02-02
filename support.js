@@ -117,6 +117,11 @@ const actions = [
     reply: (message, output) => `\n${output.join('\n')}`,
 },
 {
+    action: (data, _message, prompt) => prompt,
+    regexp: /^(hello|hi|good [\s\w]*|happy [\s\w]*|yo|bonjour|bonsoir|nihao|hola)/i,
+    reply: (message, output) => `${output} ${message.userName}`,
+},
+{
     action: (_data, _message, _type) => true,
     regexp: /.*\?$/i,
     reply: (message, _output) => `${message.userName} I don't understand the question`,
