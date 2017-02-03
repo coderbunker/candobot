@@ -43,11 +43,13 @@ const actions = [
 },
 {
     /* eslint-disable max-params */
-    action: (data, _m, id, comment) => [
-        ticket.findTicket(data.tickets, id), comment
-    ],
+    action: (data, _m, id, comment) => ({
+        'comment': comment,
+        'ticket': ticket.findTicket(data.tickets, id),
+    }),
     regexp: /ticket #?([0-9]*) (.*)$/i,
-    reply: (message, output) => ticket.addComment(output[0], output[1]),
+    reply: (message, output) => ticket.addComment(
+        output.ticket, output.comment),
 },
 {
     action: (data, message, id) => ticket.assign(
@@ -68,11 +70,13 @@ const actions = [
     reply: (message, output) => JSON.stringify(output, null, 4),
 },
 {
-    action: (data, _message, username) => [
-        data.tickets, username.toLowerCase()
-    ],
+    action: (data, _message, username) => ({
+            'tickets': data.tickets,
+            'username': username.toLowerCase()
+    }),
     regexp: /todo ?(\w*)/i,
-    reply: (message, output) => ticket.showTickets(output[0], ['open'], output[1]),
+    reply: (message, output) => ticket.showTickets(
+        output.tickets, ['open'], output.username),
 },
 {
     action: (data, _message) => data.tickets,
@@ -96,7 +100,7 @@ const actions = [
 },
 {
     action: (_data, _message, _type) => true,
-    regexp: /gimme high five/i,
+    regexp: /high five/i,
     reply: (_message, _output) => 'ヘ( ^o^)ノ＼(^_^ )',
 },
 {
