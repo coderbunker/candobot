@@ -54,6 +54,40 @@ function twoTickets() {
     }
 }
 
+function threeTickets() {
+    return {
+        tickets: {
+            '1': {
+                assignee: null,
+                closed: null,
+                content: 'content',
+                id: '1',
+                requester: 'Ricky',
+                roomName: 'MyRoom',
+                status: 'open',
+            },
+            '2': {
+                assignee: null,
+                closed: null,
+                content: 'content',
+                id: '2',
+                requester: 'Dmitry',
+                roomName: 'MyRoom',
+                status: 'open',
+            },
+            '3': {
+                assignee: 'Ricky',
+                closed: null,
+                content: 'content',
+                id: '3',
+                requester: 'Dmitry',
+                roomName: 'OtherRoom',
+                status: 'open',
+            },
+            lastId: 3,
+        }
+    }
+}
 function emptyData() {
     return {
         tickets: {
@@ -164,6 +198,13 @@ describe('support', function() {
     it('generic question', function() {
         const reply = support.process(oneTicket(), message('why are you so bad?'))
         assert.match(reply, /I don't understand the question/)
+    })
+
+    it('TODO excludes other rooms ticket', function() {
+        const reply = support.process(threeTickets(), message('todo'))
+        assert.match(reply, /#1/)
+        assert.match(reply, /#2/)
+        assert.notMatch(reply, /#3/)
     })
 
     it('inventory', function() {

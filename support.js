@@ -70,23 +70,37 @@ const actions = [
     reply: (message, output) => JSON.stringify(output, null, 4),
 },
 {
-    action: (data, _message, username) => ({
-            'tickets': data.tickets,
-            'username': username.toLowerCase()
+    action: (data, message, username) => ({
+            'tickets': ticket.filterTicketsAnd(
+                username ? ticket.userNameFilter(
+                    data.tickets, username) : data.tickets
+            , {
+                'roomName': message.roomName,
+                'status': 'open'
+            }),
     }),
     regexp: /todo ?(\w*)/i,
-    reply: (message, output) => ticket.showTickets(
-        output.tickets, ['open'], output.username),
+    reply: (message, output) => ticket.showTickets(output.tickets),
 },
 {
-    action: (data, _message) => data.tickets,
+    action: (data, message) => ({
+            'tickets': ticket.filterTicketsOr(
+                ticket.userNameFilter(data.tickets, message.userName)
+            , {
+                status: 'open'
+            })
+    }),
     regexp: /mine/i,
-    reply: (message, output) => ticket.showTickets(output, ['open'], message.userName),
+    reply: (message, output) => ticket.showTickets(output.tickets),
 },
 {
-    action: (data, _message) => data.tickets,
+    action: (data, message) => ({
+            'tickets': ticket.filterTicketsOr(data.tickets, {
+                'roomName': message.roomName,
+            }),
+    }),
     regexp: /history/i,
-    reply: (message, output) => ticket.showTickets(output, ['open', 'closed']),
+    reply: (message, output) => ticket.showTickets(output.tickets),
 },
 {
     action: (data, _message, id) => ticket.forgetTicket(data.tickets, id),
