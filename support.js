@@ -32,7 +32,7 @@ const actions = [
 },
 {
     action: (data, message, content) =>
-        ticket.openTicket(data.tickets, message, content),
+        ticket.openTicket(data.tickets, message, content.trim()),
     regexp: /please (.*)/i,
     reply: (message, output) => `will ${output.content} (ticket #${output.id})`,
 },
@@ -85,9 +85,9 @@ const actions = [
     reply: (message, output) => ticket.showTickets(output, ['open', 'closed']),
 },
 {
-    action: (data, _message) => ticket.forget(data.tickets),
-    regexp: /forget it/i,
-    reply: (message, output) => `deleted ${output} tickets`,
+    action: (data, _message, id) => ticket.forgetTicket(data.tickets, id),
+    regexp: /forget #?([0-9]*)/i,
+    reply: (message, output) => `deleted ticket #${output}`,
 },
 {
     action: (_data, _message, _type) => true,

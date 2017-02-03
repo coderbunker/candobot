@@ -18,7 +18,7 @@ module.exports = {
         "brace-style": "error",
         "callback-return": "error",
         "camelcase": "error",
-        "capitalized-comments": "error",
+        "capitalized-comments": "off",
         "class-methods-use-this": "error",
         "comma-dangle": "off",
         "comma-spacing": [

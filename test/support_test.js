@@ -104,9 +104,9 @@ describe('support', function() {
 
     it('forget it', function() {
         const data = oneTicket()
-        const reply = support.process(data, message('forget it'))
-        assert.equal(reply, '#cando: deleted 1 tickets')
-        assert.equal(data.tickets.lastId, 0)
+        const reply = support.process(data, message('forget #1'))
+        assert.equal(reply, '#cando: deleted ticket #1')
+        assert.equal(data.tickets.lastId, 1)
     })
 
     it('gimme a compliment', function() {
@@ -145,19 +145,19 @@ describe('support', function() {
 
     it('TODO with ticket specific mine', function() {
         const reply = support.process(twoTickets(), message('mine'))
-        assert.match(reply, /ticket #1/)
-        assert.notMatch(reply, /ticket #2/)
+        assert.match(reply, /#1: Ricky/)
+        assert.notMatch(reply, /#2/)
     })
 
     it('TODO with ticket specific other user', function() {
         const reply = support.process(twoTickets(), message('TODO dmitry'))
-        assert.notMatch(reply, /ticket #1/)
-        assert.match(reply, /ticket #2/)
+        assert.notMatch(reply, /#1/)
+        assert.match(reply, /#2/)
     })
 
     it('Add comment to ticket', function() {
         const reply = support.process(oneTicket(), message('ticket #1 do not forget to get different colors'))
-        assert.match(reply, /ticket #1/)
+        assert.match(reply, /#1/)
         assert.match(reply, /do not forget to get different colors/)
     })
 
