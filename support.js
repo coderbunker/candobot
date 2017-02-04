@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const assert = require('assert')
 const reload = require('./reloader')
-const ticket = reload('./ticket.js')
+const ticket = reload(path.join(__dirname, 'ticket.js'))
 
 function ProcessError(message) {
   this.name = 'ProcessError';
