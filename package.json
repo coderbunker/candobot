@@ -5,6 +5,8 @@
   "main": "bot.js",
   "dependencies": {
     "candobot-data": "git+ssh://git@github.com/coderbunker/candobot-data.git",
+    "mailgun-js": "^0.8.1",
+    "request": "^2.79.0",
     "require-reload": "^0.2.2",
     "wechaty": "^0.7.3"
   },

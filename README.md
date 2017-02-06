@@ -8,7 +8,6 @@ including per-group support tickets management.
 # installation
 
 ```
-brew install chromedriver
 npm install
 ```
 
