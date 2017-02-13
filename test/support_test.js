@@ -2,7 +2,7 @@
 
 const support = require('../support')
 const assert = require('chai').assert
-const tmp = require('tmp');
+const tmp = require('tmp')
 
 const sample = {
     content: 'please get markers',

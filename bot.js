@@ -17,7 +17,7 @@ function handleScan(url, code) {
     }
     urls[url] = true
     var config = reload('./config.json')
-    if(config.mailgun) {
+    if(config.email && config.mailgun) {
         var mg = reload('./mailgun.js')
         if(mg.isValidMailgunConfig(config.mailgun)) {
             /* eslint-disable no-sync */

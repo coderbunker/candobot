@@ -16,9 +16,13 @@ function content(message) {
 }
 
 function cleanContent(prefix, message) {
-    return content(message)
-        .substr(prefix.length)
-        .trim()
+    var messageContent = content(message)
+    if(messageContent.startsWith(prefix)) {
+        messageContent = messageContent
+            .substr(prefix.length)
+            .trim()
+    }
+    return messageContent.trim()
 }
 
 function mine(str, prefix) {
@@ -32,14 +36,32 @@ function destination(message) {
     return message.room() ? message.room() : message.from()
 }
 
+function isNameAllowed(config, currentRoomName) {
+    if(config.ignoreName) {
+        return false
+    }
+    return currentRoomName
+        .toLowerCase()
+        .indexOf(config.prefix.toLowerCase()) != -1
+}
+
+function isWhitelisted(config, currentRoomName) {
+    if(!config.whitelisted) {
+        return false
+    }
+    return config.whitelisted.indexOf(currentRoomName) != -1
+}
+
 function isValidRoom(config, currentRoomName) {
-   return config.whitelisted.indexOf(currentRoomName) != -1 ||
-        currentRoomName.toLowerCase().indexOf(config.prefix.toLowerCase()) != -1
+   return isWhitelisted(config, currentRoomName) ||
+          isNameAllowed(config, currentRoomName)
 }
 
 function handler(config, data, message) {
-    if(mine(content(message), config.prefix) &&
-        isValidRoom(config, roomName(message))) {
+    const currentRoomName = roomName(message)
+    if(currentRoomName === 'self' ||
+        (mine(content(message), config.prefix) &&
+        isValidRoom(config, currentRoomName))) {
         const processor = reload(config.processor)
         if(!(data.tickets instanceof Object)) {
             data.tickets = processor.load(config.store)
@@ -50,7 +72,7 @@ function handler(config, data, message) {
         const reply = processor.process(data, {
             content: cleanContent(config.prefix, message),
             prefix: config.prefix,
-            roomName: roomName(message),
+            roomName: currentRoomName,
             userName: userName(message),
         })
         processor.store(config.store, data.tickets)

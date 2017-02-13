@@ -74,7 +74,7 @@ describe('handler', function() {
         handler(config, {tickets: {lastId: 0}}, message)
     })
 
-    it('room with prefix in name is accepted', function() {
+    it('room with prefix is accepted', function() {
         const message = createWeChatyMessage(
             'Ricky',
             'CANDO testing',
@@ -82,5 +82,28 @@ describe('handler', function() {
             say)
         handler(config, {tickets: {lastId: 0}}, message)
         assert.equal(sayValue, '#cando: will add ticket (ticket #1)')
+    })
+
+    it('room with prefix in name is rejected if ignoreName is true', function(done) {
+        const message = createWeChatyMessage(
+            'Ricky',
+            'CANDO testing',
+            'cando please add ticket',
+            done)
+        handler({
+            ignoreName: true,
+            prefix: 'cando',
+        }, {tickets: {lastId: 0}}, message)
+        done()
+    })
+
+    it('when sent to self, messages are always accepted', function() {
+        const message = createWeChatyMessage(
+            'Ricky',
+            'self',
+            'please add ticket',
+            say)
+        handler(config, {tickets: {lastId: 0}}, message)
+         assert.equal(sayValue, '#cando: will add ticket (ticket #1)')
     })
 })
