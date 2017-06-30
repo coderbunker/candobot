@@ -1,10 +1,20 @@
 {
     "prefix": "cando",
+    "ignoreName": false,
     "whitelisted": [
-        "Agora Space #3:bunker",
-        "Agora - management",
-        "File Transfer"
+        "CANDO bot testing"
     ],
-    "management": "Agora - management",
-    "store": "./tickets.json"
+    "management": [
+        "Agora - management"
+    ],
+    "store": "./tickets.json",
+    "processor": "./support.js",
+    "email": false,
+    "mailgun": {
+        "apiKey": "apiKeyFromMailGun",
+        "domain": "domainDNSEntryForMailGun",
+        "from": "Coderbunker IT <email@example.com>",
+        "to": "emailgroup@example.com",
+        "subject": "Please scan WeChat QRcode with Coderbunker Phone"
+    }
 }
